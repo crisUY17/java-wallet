@@ -3,14 +3,14 @@ package com.tuapp.wallet.model;
 import java.sql.Date;
 
 public class Transaction {
-    private String transactionID;
+    private int transactionID;
     private TipoTransaccion transactionType;
     private double amount;
     private Date date;
     private String description;
     private Currency currency;
 
-    public Transaction(String transactionID, TipoTransaccion transactionType, double amount, Date date, String description, Currency currency) {
+    public Transaction(int transactionID, TipoTransaccion transactionType, double amount, Date date, String description, Currency currency) {
         this.transactionID = transactionID;
         this.transactionType = transactionType;
         this.amount = amount;
@@ -19,11 +19,11 @@ public class Transaction {
         this.currency = currency;
     }
 
-    public String getTransactionID() {
+    public int getTransactionID() {
         return transactionID;
     }
 
-    public void setTransactionID(String transactionID) {
+    public void setTransactionID(int transactionID) {
         this.transactionID = transactionID;
     }
 
