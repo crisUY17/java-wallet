@@ -15,6 +15,7 @@ public class Account {
         this.accountName = accountName;
         this.description = description;
         this.currency = currency;
+        this.transactions = new java.util.ArrayList<>();
     }
 
     public int getAccountID() {
@@ -55,10 +56,6 @@ public class Account {
 
     public void setDescription(String description) {
         this.description = description;
-    }
-
-    public void addCurrency(Currency currency) {
-        this.currency = currency;
     }
 
     public void addTransaction(Transaction transaction) {
