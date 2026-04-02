@@ -1,18 +1,20 @@
 package com.tuapp.wallet.model;
 
-import java.util.Currency;
+import java.util.Comparator;
 import java.util.List;
+import java.time.LocalDate;
 
 public class Account {
     private int accountID;
     private String accountName;
     private String description;
-    private List<Currency> currencys;
+    private Currency currency;
     private List<Transaction> transactions;
 
-    public Account(String accountName, String description) {
+    public Account(String accountName, String description, Currency currency) {
         this.accountName = accountName;
         this.description = description;
+        this.currency = currency;
     }
 
     public int getAccountID() {
@@ -27,16 +29,16 @@ public class Account {
         return description;
     }
 
-    public List<Currency> getCurrencys() {
-        return currencys;
+    public Currency getCurrency() {
+        return currency;
     }
 
     public List<Transaction> getTransactions() {
         return transactions;
     }
 
-    public void setCurrencys(List<Currency> currencys) {
-        this.currencys = currencys;
+    public void setCurrencys(Currency currency) {
+        this.currency = currency;
     }
 
     public void setTransactions(List<Transaction> transactions) {
@@ -56,11 +58,34 @@ public class Account {
     }
 
     public void addCurrency(Currency currency) {
-        this.currencys.add(currency);
+        this.currency = currency;
     }
 
     public void addTransaction(Transaction transaction) {
         this.transactions.add(transaction);
+    }
+
+    public void removeTransaction(Transaction transaction) {
+        this.transactions.remove(transaction);
+    }
+
+    public double getBalance() {
+        double balance = 0;
+        for (Transaction t : transactions) {
+            if (t.getTransactionType() == TipoTransaccion.INGRESO) {
+                balance += t.getAmount();
+            } else {
+                balance -= t.getAmount();
+            }
+        }
+        return balance;
+    }
+
+    public LocalDate getLastTransactionDate() {
+    return transactions.stream()
+        .map(Transaction::getDate)
+        .max(Comparator.naturalOrder())
+        .orElse(null);
     }
 
 }

@@ -14,7 +14,7 @@ public class TransactionDAO {
         transactions.add(transaction);
     }
 
-    public ArrayList<Transaction> getTransactions() {
+    public List<Transaction> getTransactions() {
         return transactions;
     }
 

@@ -1,22 +1,23 @@
 package com.tuapp.wallet.model;
 
-import java.sql.Date;
+import java.time.LocalDate;
 
 public class Transaction {
     private int transactionID;
     private TipoTransaccion transactionType;
     private double amount;
-    private Date date;
+    private LocalDate date;
     private String description;
     private Currency currency;
+    private Account account;
 
-    public Transaction(int transactionID, TipoTransaccion transactionType, double amount, Date date, String description, Currency currency) {
-        this.transactionID = transactionID;
+    public Transaction(TipoTransaccion transactionType, double amount, LocalDate date, String description, Currency currency, Account account) {
         this.transactionType = transactionType;
         this.amount = amount;
         this.date = date;
         this.description = description;
         this.currency = currency;
+        this.account = account;
     }
 
     public int getTransactionID() {
@@ -43,11 +44,11 @@ public class Transaction {
         this.amount = amount;
     }
 
-    public Date getDate() {
+    public LocalDate getDate() {
         return date;
     }
 
-    public void setDate(Date date) {
+    public void setDate(LocalDate date) {
         this.date = date;
     }
 
@@ -65,6 +66,14 @@ public class Transaction {
 
     public void setCurrency(Currency currency) {
         this.currency = currency;
+    }
+
+    public void setAccount(Account account) {
+        this.account = account;
+    }
+
+    public Account getAccount() {
+        return account;
     }
 
 }

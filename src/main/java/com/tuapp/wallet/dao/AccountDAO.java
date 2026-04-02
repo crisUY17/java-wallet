@@ -2,6 +2,7 @@ package com.tuapp.wallet.dao;
 
 import java.util.ArrayList;
 import com.tuapp.wallet.model.Account;
+import java.util.List;
 
 public class AccountDAO {
     private ArrayList<Account> accounts = new ArrayList<>();
@@ -12,7 +13,7 @@ public class AccountDAO {
         accounts.add(account);
     }
 
-    public ArrayList<Account> getAccounts() {
+    public List<Account> getAccounts() {
         return accounts;
     }
 
