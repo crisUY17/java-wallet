@@ -1,8 +1,9 @@
-package com.tuapp.wallet.dao;
+package com.cristian.wallet.dao;
 
 import java.util.ArrayList;
+import java.util.List;
 
-import com.tuapp.wallet.model.Transaction;
+import com.cristian.wallet.model.Transaction;
 
 public class TransactionDAO {
     private ArrayList<Transaction> transactions = new ArrayList<>();

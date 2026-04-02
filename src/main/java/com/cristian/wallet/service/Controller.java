@@ -1,4 +1,4 @@
-package com.tuapp.wallet.service;
+package com.cristian.wallet.service;
 
 import java.util.Map;
 import java.util.List;
@@ -8,13 +8,13 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.time.LocalDate;
 
-import com.tuapp.wallet.model.Transaction;
-import com.tuapp.wallet.model.Account;
-import com.tuapp.wallet.dao.TransactionDAO;
-import com.tuapp.wallet.dao.AccountDAO;
-import com.tuapp.wallet.ui.IController;
-import com.tuapp.wallet.model.Currency;
-import com.tuapp.wallet.model.TipoTransaccion;
+import com.cristian.wallet.model.Transaction;
+import com.cristian.wallet.model.Account;
+import com.cristian.wallet.dao.TransactionDAO;
+import com.cristian.wallet.dao.AccountDAO;
+import com.cristian.wallet.ui.IController;
+import com.cristian.wallet.model.Currency;
+import com.cristian.wallet.model.TipoTransaccion;
 
 public class Controller implements IController {
     private final AccountDAO accountDAO;
@@ -27,7 +27,7 @@ public class Controller implements IController {
 
     @Override
     public Map<Currency, Double> getTotalBalance() {
-        Map<Currency, Double> totalBalance = new Map<>();
+        Map<Currency, Double> totalBalance = new HashMap<>();
         for (Account account : accountDAO.getAccounts()) {
             Currency currency = account.getCurrency();
             totalBalance.merge(currency, account.getBalance(), Double::sum);

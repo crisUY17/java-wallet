@@ -1,10 +1,10 @@
-package com.tuapp.wallet.ui;
+package com.cristian.wallet.ui;
 import java.util.Map;
 import java.util.List;
-import com.tuapp.wallet.model.Currency;
-import com.tuapp.wallet.model.TipoTransaccion;
-import com.tuapp.wallet.model.Transaction;
-import com.tuapp.wallet.model.Account;
+import com.cristian.wallet.model.Currency;
+import com.cristian.wallet.model.TipoTransaccion;
+import com.cristian.wallet.model.Transaction;
+import com.cristian.wallet.model.Account;
 
 
 public interface IController {

@@ -1,4 +1,4 @@
-package com.tuapp.wallet.model;
+package com.cristian.wallet.model;
 
 public enum TipoTransaccion {
     INGRESO,

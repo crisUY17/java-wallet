@@ -1,4 +1,4 @@
-package com.tuapp.wallet;
+package com.cristian.wallet;
 
 import javax.swing.SwingUtilities;
 import javax.swing.JFrame;

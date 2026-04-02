@@ -1,9 +1,7 @@
-com\tuapp\wallet\model\Transaction.class
-com\tuapp\wallet\service\Controller.class
-com\tuapp\wallet\dao\TransactionDAO.class
-com\tuapp\wallet\model\Account.class
-com\tuapp\wallet\Main.class
-com\tuapp\wallet\model\TipoTransaccion.class
-com\tuapp\wallet\ui\IController.class
-com\tuapp\wallet\model\Currency.class
-com\tuapp\wallet\dao\AccountDAO.class
+com\cristian\wallet\Main.class
+com\cristian\wallet\model\Currency.class
+com\cristian\wallet\model\Account.class
+com\cristian\wallet\ui\IController.class
+com\cristian\wallet\dao\AccountDAO.class
+com\cristian\wallet\model\Transaction.class
+com\cristian\wallet\model\TipoTransaccion.class

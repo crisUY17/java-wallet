@@ -1,7 +1,7 @@
-package com.tuapp.wallet.dao;
+package com.cristian.wallet.dao;
 
 import java.util.ArrayList;
-import com.tuapp.wallet.model.Account;
+import com.cristian.wallet.model.Account;
 import java.util.List;
 
 public class AccountDAO {
