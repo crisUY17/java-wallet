@@ -3,10 +3,9 @@ package com.cristian.wallet.service;
 import java.util.Map;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.time.LocalDate;
+import java.util.EnumMap;
 
 import com.cristian.wallet.model.Transaction;
 import com.cristian.wallet.model.Account;
@@ -34,7 +33,7 @@ public class Controller implements IController {
 
     @Override
     public Map<Currency, Double> getTotalBalance() {
-        Map<Currency, Double> totalBalance = new HashMap<>();
+        Map<Currency, Double> totalBalance = new EnumMap<>(Currency.class);
         for (Account account : accountDAO.getAccounts()) {
             Currency currency = account.getCurrency();
             totalBalance.merge(currency, getAccountBalance(account.getAccountID()), Double::sum);
@@ -112,8 +111,9 @@ public class Controller implements IController {
         if (getAccountBalance(fromAccountID) < amount) {
             throw new IllegalArgumentException("Fondos insuficientes en la cuenta de origen");
         }
-        createTransaction(TipoTransaccion.EGRESO, amount, description + " (Transferencia a " + toAccount.getAccountName() + ")", currency, fromAccountID);
-        createTransaction(TipoTransaccion.INGRESO, amount, description + " (Transferencia desde " + fromAccount.getAccountName() + ")", currency, toAccountID);
+        Transaction egreso = new Transaction(TipoTransaccion.EGRESO, amount, LocalDate.now(), description + " (Transferencia a " + toAccount.getAccountName() + ")", currency, fromAccount);
+        Transaction ingreso = new Transaction(TipoTransaccion.INGRESO, amount, LocalDate.now(), description + " (Transferencia desde " + fromAccount.getAccountName() + ")", currency, toAccount);
+        transactionDAO.transferFunds(egreso, ingreso);
     }
 
     @Override

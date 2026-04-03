@@ -18,15 +18,9 @@ public class TransactionDAO implements ITransactionDAO {
     
     private final IAccountDAO accountDAO;
 
-    public TransactionDAO(IAccountDAO accountDAO) {
-        this.accountDAO = accountDAO;
-    }
-
-    @Override
-    public void addTransaction(Transaction transaction) {
+    private void addTransaction(Transaction transaction, Connection conn) throws SQLException {
         String sql = "INSERT INTO transactions (account_id, type, amount, date, description, currency) VALUES (?, ?, ?, ?, ?, ?)";
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setInt(1, transaction.getAccount().getAccountID());
             stmt.setString(2, transaction.getTransactionType().name());
             stmt.setDouble(3, transaction.getAmount());
@@ -38,8 +32,36 @@ public class TransactionDAO implements ITransactionDAO {
             if (rs.next()) {
                 transaction.setTransactionID(rs.getInt(1));
             }
+        }
+    }
+
+    public TransactionDAO(IAccountDAO accountDAO) {
+        this.accountDAO = accountDAO;
+    }
+
+    @Override
+    public void addTransaction(Transaction transaction) {
+        try (Connection conn = DatabaseManager.getConnection()) {
+            addTransaction(transaction, conn);
         } catch (SQLException e) {
-            System.out.println("Error al agregar transacción: " + e.getMessage());
+            System.out.println("Error de conexión: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public void transferFunds(Transaction egreso, Transaction ingreso) {
+        try (Connection conn = DatabaseManager.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                addTransaction(egreso, conn);
+                addTransaction(ingreso, conn);
+                conn.commit();
+            } catch (SQLException e) {
+                conn.rollback();
+                System.out.println("Error en la transferencia: " + e.getMessage());
+            }
+        } catch (SQLException e) {
+            System.out.println("Error de conexión: " + e.getMessage());
         }
     }
 
@@ -181,4 +203,5 @@ public class TransactionDAO implements ITransactionDAO {
             System.out.println("Error al actualizar transacción: " + e.getMessage());
         }
     }
+    
 }

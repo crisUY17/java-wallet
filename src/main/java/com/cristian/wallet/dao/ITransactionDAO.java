@@ -5,6 +5,7 @@ import com.cristian.wallet.model.Transaction;
 
 public interface ITransactionDAO {
     void addTransaction(Transaction transaction);
+    void transferFunds(Transaction egreso, Transaction ingreso);
     List<Transaction> getTransactions();
     List<Transaction> getTransactionsByAccount(int accountID);
     Transaction getTransactionById(int transactionID);
