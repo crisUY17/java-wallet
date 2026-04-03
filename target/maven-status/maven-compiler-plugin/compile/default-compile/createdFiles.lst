@@ -1,7 +1,0 @@
-com\cristian\wallet\Main.class
-com\cristian\wallet\model\Currency.class
-com\cristian\wallet\model\Account.class
-com\cristian\wallet\ui\IController.class
-com\cristian\wallet\dao\AccountDAO.class
-com\cristian\wallet\model\Transaction.class
-com\cristian\wallet\model\TipoTransaccion.class
