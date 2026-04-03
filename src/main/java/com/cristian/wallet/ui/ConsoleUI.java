@@ -7,6 +7,7 @@ import java.util.Scanner;
 import com.cristian.wallet.model.Currency;
 import com.cristian.wallet.model.TipoTransaccion;
 import com.cristian.wallet.model.Transaction;
+import com.cristian.wallet.service.IController;
 import com.cristian.wallet.model.Account;
 
 public class ConsoleUI {
@@ -41,7 +42,7 @@ public class ConsoleUI {
         for (Account account : accounts) {
             System.out.printf("Nombre: %s, Descripción: %s, Moneda: %s, Balance: %.2f%n",
                     account.getAccountName(), account.getDescription(),
-                    account.getCurrency(), account.getBalance());
+                    account.getCurrency(), controller.getAccountBalance(account.getAccountID()));
         }
     }
 

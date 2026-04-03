@@ -1,15 +1,15 @@
-package com.cristian.wallet.ui;
+package com.cristian.wallet.service;
 import java.util.Map;
 import java.util.List;
 import com.cristian.wallet.model.Currency;
 import com.cristian.wallet.model.TipoTransaccion;
 import com.cristian.wallet.model.Transaction;
-import com.cristian.wallet.dao.AccountDAO;
-import com.cristian.wallet.dao.TransactionDAO;
 import com.cristian.wallet.model.Account;
 
 
 public interface IController {
+    // Retorna el balance actual de una cuenta específica (sin la moneda)
+    double getAccountBalance(int accountID);
 
     // Retorna un mapa con el balance total por cada moneda
     Map<Currency, Double> getTotalBalance();

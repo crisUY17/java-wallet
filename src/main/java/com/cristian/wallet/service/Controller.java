@@ -10,17 +10,24 @@ import java.time.LocalDate;
 
 import com.cristian.wallet.model.Transaction;
 import com.cristian.wallet.model.Account;
-import com.cristian.wallet.dao.TransactionDAO;
-import com.cristian.wallet.dao.AccountDAO;
-import com.cristian.wallet.ui.IController;
+import com.cristian.wallet.dao.ITransactionDAO;
+import com.cristian.wallet.dao.IAccountDAO;
 import com.cristian.wallet.model.Currency;
 import com.cristian.wallet.model.TipoTransaccion;
 
 public class Controller implements IController {
-    private final AccountDAO accountDAO;
-    private final TransactionDAO transactionDAO;
+    private final IAccountDAO accountDAO;
+    private final ITransactionDAO transactionDAO;
 
-    public Controller(AccountDAO accountDAO, TransactionDAO transactionDAO) {
+    public double getAccountBalance(int accountID) {
+    return transactionDAO.getTransactionsByAccount(accountID)
+        .stream()
+        .mapToDouble(t -> t.getTransactionType() == TipoTransaccion.INGRESO
+            ? t.getAmount() : -t.getAmount())
+        .sum();
+    }
+
+    public Controller(IAccountDAO accountDAO, ITransactionDAO transactionDAO) {
         this.accountDAO = accountDAO;
         this.transactionDAO = transactionDAO;
     }
@@ -30,7 +37,7 @@ public class Controller implements IController {
         Map<Currency, Double> totalBalance = new HashMap<>();
         for (Account account : accountDAO.getAccounts()) {
             Currency currency = account.getCurrency();
-            totalBalance.merge(currency, account.getBalance(), Double::sum);
+            totalBalance.merge(currency, getAccountBalance(account.getAccountID()), Double::sum);
         }
         return totalBalance;
     }
@@ -38,10 +45,10 @@ public class Controller implements IController {
     @Override
     public List<Account> getAccounts() {
         List<Account> accounts = new ArrayList<>(accountDAO.getAccounts());
-        accounts.sort(Comparator.comparing(
-            Account::getLastTransactionDate,
-            Comparator.nullsLast(Comparator.reverseOrder())
-        ));
+        accounts.sort(Comparator.comparing((Account account) -> {
+            Transaction lastTransaction = transactionDAO.getLastTransactionByAccount(account.getAccountID());
+            return lastTransaction != null ? lastTransaction.getDate() : LocalDate.MIN;
+        }).reversed());
         return accounts;
     }
 
@@ -54,11 +61,7 @@ public class Controller implements IController {
 
     @Override
     public List<Transaction> getTransactionsByAccount(int accountID) {
-        Account account = accountDAO.getAccountById(accountID);
-        if (account == null) {
-            return Collections.emptyList();
-        }
-        List<Transaction> transactions = new ArrayList<>(account.getTransactions());
+        List<Transaction> transactions = new ArrayList<>(transactionDAO.getTransactionsByAccount(accountID));
         transactions.sort(Comparator.comparing(Transaction::getDate).reversed());
         return transactions;
     }
@@ -82,11 +85,10 @@ public class Controller implements IController {
         if (currency != account.getCurrency()) {
             throw new IllegalArgumentException("La moneda no coincide con la de la cuenta");
         }
-        if (transactionType == TipoTransaccion.EGRESO && account.getBalance() < amount) {
+        if (transactionType == TipoTransaccion.EGRESO && getAccountBalance(accountID) < amount) {
             throw new IllegalArgumentException("Fondos insuficientes");
         }
         Transaction transaction = new Transaction(transactionType, amount, LocalDate.now(), description, currency, account);
-        account.addTransaction(transaction);
         transactionDAO.addTransaction(transaction);
         
     }
@@ -107,7 +109,7 @@ public class Controller implements IController {
         if (currency != fromAccount.getCurrency() || currency != toAccount.getCurrency()) {
             throw new IllegalArgumentException("La moneda no coincide con la de las cuentas");
         }
-        if (fromAccount.getBalance() < amount) {
+        if (getAccountBalance(fromAccountID) < amount) {
             throw new IllegalArgumentException("Fondos insuficientes en la cuenta de origen");
         }
         createTransaction(TipoTransaccion.EGRESO, amount, description + " (Transferencia a " + toAccount.getAccountName() + ")", currency, fromAccountID);
@@ -120,7 +122,6 @@ public class Controller implements IController {
         if (transaction == null) {
             throw new IllegalArgumentException("La transacción no existe");
         }
-        transaction.getAccount().removeTransaction(transaction);
         transactionDAO.deleteTransaction(transactionID);
     }
 
@@ -130,9 +131,6 @@ public class Controller implements IController {
         if (account == null) {
             throw new IllegalArgumentException("La cuenta no existe");
         }
-        new ArrayList<>(account.getTransactions()).forEach(transaction -> {
-            transactionDAO.deleteTransaction(transaction.getTransactionID());
-        });
         accountDAO.deleteAccount(accountID);
     }
 }
