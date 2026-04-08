@@ -1,5 +1,10 @@
 package com.cristian.wallet;
 
+import java.sql.Connection;
+
+import javax.swing.JFrame;
+import javax.swing.SwingUtilities;
+
 import com.cristian.wallet.dao.AccountDAO;
 import com.cristian.wallet.dao.DatabaseManager;
 import com.cristian.wallet.dao.TransactionDAO;
@@ -7,30 +12,27 @@ import com.cristian.wallet.dao.IAccountDAO;
 import com.cristian.wallet.dao.ITransactionDAO;
 import com.cristian.wallet.service.Controller;
 import com.cristian.wallet.service.IController;
-import com.cristian.wallet.ui.ConsoleUI;
-
-/*
-import javax.swing.SwingUtilities;
-import javax.swing.JFrame;
-public class Main {
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            JFrame frame = new JFrame("Java Wallet");
-            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            frame.setSize(800, 600);
-            frame.setVisible(true);
-        });
-    }
-}
- */
+import com.cristian.wallet.ui.SwingUI;
 
 public class Main {
     public static void main(String[] args) {
-        DatabaseManager.initializeDatabase();
-        IAccountDAO accountDAO = new AccountDAO();
-        ITransactionDAO transactionDAO = new TransactionDAO(accountDAO);
-        IController controller = new Controller(accountDAO, transactionDAO);
-        ConsoleUI ui = new ConsoleUI(controller);
-        ui.start();
+        try {
+            DatabaseManager.initializeDatabase();
+            Connection conn = DatabaseManager.getConnection();
+            IAccountDAO accountDAO = new AccountDAO(conn);
+            ITransactionDAO transactionDAO = new TransactionDAO(accountDAO, conn);
+            IController controller = new Controller(accountDAO, transactionDAO);
+
+            SwingUtilities.invokeLater(() -> {
+                JFrame frame = new JFrame("Mi Billetera");
+                frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                frame.setContentPane(new SwingUI(controller));
+                frame.setSize(800, 600);
+                frame.setLocationRelativeTo(null);
+                frame.setVisible(true);
+            });
+        } catch (Exception e) {
+            System.out.println("Error en la aplicación: " + e.getMessage());
+        }
     }
 }

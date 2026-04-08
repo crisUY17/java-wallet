@@ -8,6 +8,7 @@ public interface IAccountDAO {
     void addAccount(Account account);
     List<Account> getAccounts();
     Account getAccountById(int accountID);
+    Account getAccountByTransaction(int TransactionID);
     void deleteAccount(int accountID);
     void updateAccount(Account updatedAccount);      
 }

@@ -18,14 +18,6 @@ public class Controller implements IController {
     private final IAccountDAO accountDAO;
     private final ITransactionDAO transactionDAO;
 
-    public double getAccountBalance(int accountID) {
-    return transactionDAO.getTransactionsByAccount(accountID)
-        .stream()
-        .mapToDouble(t -> t.getTransactionType() == TipoTransaccion.INGRESO
-            ? t.getAmount() : -t.getAmount())
-        .sum();
-    }
-
     public Controller(IAccountDAO accountDAO, ITransactionDAO transactionDAO) {
         this.accountDAO = accountDAO;
         this.transactionDAO = transactionDAO;
@@ -39,6 +31,15 @@ public class Controller implements IController {
             totalBalance.merge(currency, getAccountBalance(account.getAccountID()), Double::sum);
         }
         return totalBalance;
+    }
+
+    @Override
+    public double getAccountBalance(int accountID) {
+        return transactionDAO.getTransactionsByAccount(accountID)
+            .stream()
+            .mapToDouble(t -> t.getTransactionType() == TipoTransaccion.INGRESO
+                ? t.getAmount() : -t.getAmount())
+            .sum();
     }
 
     @Override
@@ -56,6 +57,11 @@ public class Controller implements IController {
         List<Transaction> transactions = new ArrayList<>(transactionDAO.getTransactions());
         transactions.sort(Comparator.comparing(Transaction::getDate).reversed());
         return transactions;
+    }
+
+    @Override
+    public Account getAccountByTransaction(int transactionID) {
+        return accountDAO.getAccountByTransaction(transactionID);
     }
 
     @Override

@@ -12,11 +12,17 @@ import com.cristian.wallet.model.Account;
 import com.cristian.wallet.model.Currency;
 
 public class AccountDAO implements IAccountDAO {
+    private final Connection conn;
+
+    public AccountDAO(Connection conn) {
+        this.conn = conn;
+    }
+
     @Override
     public void addAccount(Account account) {
         String sql = "INSERT INTO accounts (name, description, currency) VALUES (?, ?, ?)";
-        try (Connection conn = DatabaseManager.getConnection();
-            PreparedStatement stmt = conn.prepareStatement(sql)){
+        try (
+            PreparedStatement stmt = this.conn.prepareStatement(sql)){
                 stmt.setString(1, account.getAccountName());
                 stmt.setString(2, account.getDescription());
                 stmt.setString(3, account.getCurrency().name());
@@ -26,7 +32,10 @@ public class AccountDAO implements IAccountDAO {
                     account.setAccountID(rs.getInt(1));
                 }
             } catch (SQLException e) {
-                System.out.println("Error al agregar cuenta: " + e.getMessage());
+                if (e.getMessage().contains("UNIQUE constraint failed: accounts.name")) {
+                    System.out.println("Error: Ya existe una cuenta con el nombre '" + account.getAccountName() + "'.");
+                }
+                throw new RuntimeException("Error al agregar cuenta: " + e.getMessage());
             }
     }
 
@@ -34,8 +43,8 @@ public class AccountDAO implements IAccountDAO {
     public List<Account> getAccounts() {
         List<Account> accounts = new ArrayList<>();
         String sql = "SELECT * FROM accounts";
-        try (Connection conn = DatabaseManager.getConnection();
-             Statement stmt = conn.createStatement();
+        try (
+             Statement stmt = this.conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
             while (rs.next()) {
                 Account account = new Account(
@@ -47,16 +56,15 @@ public class AccountDAO implements IAccountDAO {
                 accounts.add(account);
             }
         } catch (SQLException e) {
-            System.out.println("Error al obtener cuentas: " + e.getMessage());
+            throw new RuntimeException("Error al obtener cuentas: " + e.getMessage());
         }
         return accounts;
     }
 
     @Override
-    public Account getAccountById(int accountID) {
-        String sql = "SELECT * FROM accounts WHERE id = ?";
-        try (Connection conn = DatabaseManager.getConnection();
-            PreparedStatement stmt = conn.prepareStatement(sql)) {
+    public Account getAccountByTransaction(int accountID) {
+        String sql = "SELECT a.* FROM accounts a JOIN transactions t ON a.id = t.account_id WHERE t.id = ?";
+        try (PreparedStatement stmt = this.conn.prepareStatement(sql)) {
             stmt.setInt(1, accountID);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
@@ -70,7 +78,29 @@ public class AccountDAO implements IAccountDAO {
                 }
             }
         } catch (SQLException e) {
-            System.out.println("Error al obtener cuenta por ID: " + e.getMessage());
+            throw new RuntimeException("Error al obtener cuenta por ID de transacción: " + e.getMessage());
+        }
+        return null;
+    }
+
+    @Override
+    public Account getAccountById(int accountID) {
+        String sql = "SELECT * FROM accounts WHERE id = ?";
+        try (PreparedStatement stmt = this.conn.prepareStatement(sql)) {
+            stmt.setInt(1, accountID);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    Account account = new Account(
+                        rs.getString("name"),
+                        rs.getString("description"),
+                        Currency.valueOf(rs.getString("currency"))
+                    );
+                    account.setAccountID(rs.getInt("id"));
+                    return account;
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al obtener cuenta por ID: " + e.getMessage());
         }
         return null;
     }
@@ -78,27 +108,25 @@ public class AccountDAO implements IAccountDAO {
     @Override
     public void deleteAccount(int accountID) {
         String sql = "DELETE FROM accounts WHERE id = ?";
-        try (Connection conn = DatabaseManager.getConnection();
-            PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement stmt = this.conn.prepareStatement(sql)) {
                 stmt.setInt(1, accountID);
                 stmt.executeUpdate();   
             }   catch (SQLException e) {
-                System.out.println("Error al eliminar cuenta: " + e.getMessage());
+                throw new RuntimeException("Error al eliminar cuenta: " + e.getMessage());
             }
     }
 
     @Override
     public void updateAccount(Account updatedAccount) {
         String sql = "UPDATE accounts SET name = ?, description = ?, currency = ? WHERE id = ?";
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement stmt = this.conn.prepareStatement(sql)) {
             stmt.setString(1, updatedAccount.getAccountName());
             stmt.setString(2, updatedAccount.getDescription());
             stmt.setString(3, updatedAccount.getCurrency().name());
             stmt.setInt(4, updatedAccount.getAccountID());
             stmt.executeUpdate();
         } catch (SQLException e) {
-            System.out.println("Error al actualizar cuenta: " + e.getMessage());
+            throw new RuntimeException("Error al actualizar cuenta: " + e.getMessage());
         }
     }
 }

@@ -28,7 +28,10 @@ public interface IController {
     
     // Retorna una cuenta específica por su ID
     Account getAccount(int accountID);
-    
+
+    // Retorna la cuenta asociada a una transacción específica por su ID
+    Account getAccountByTransaction(int transactionID);
+
     // Crea una nueva transacción con fecha actual
     void createTransaction(TipoTransaccion transactionType, double amount, String description, Currency currency, int accountID);
     

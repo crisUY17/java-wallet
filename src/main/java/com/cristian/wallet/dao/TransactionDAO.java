@@ -16,11 +16,18 @@ import com.cristian.wallet.model.Transaction;
 
 public class TransactionDAO implements ITransactionDAO {
     
+    private final Connection conn;
     private final IAccountDAO accountDAO;
 
-    private void addTransaction(Transaction transaction, Connection conn) throws SQLException {
+    public TransactionDAO(IAccountDAO accountDAO, Connection conn) {
+        this.accountDAO = accountDAO;
+        this.conn = conn;
+    }
+
+    @Override
+    public void addTransaction(Transaction transaction) {
         String sql = "INSERT INTO transactions (account_id, type, amount, date, description, currency) VALUES (?, ?, ?, ?, ?, ?)";
-        try (PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (PreparedStatement stmt = this.conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setInt(1, transaction.getAccount().getAccountID());
             stmt.setString(2, transaction.getTransactionType().name());
             stmt.setDouble(3, transaction.getAmount());
@@ -31,37 +38,33 @@ public class TransactionDAO implements ITransactionDAO {
             ResultSet rs = stmt.getGeneratedKeys();
             if (rs.next()) {
                 transaction.setTransactionID(rs.getInt(1));
-            }
-        }
-    }
-
-    public TransactionDAO(IAccountDAO accountDAO) {
-        this.accountDAO = accountDAO;
-    }
-
-    @Override
-    public void addTransaction(Transaction transaction) {
-        try (Connection conn = DatabaseManager.getConnection()) {
-            addTransaction(transaction, conn);
+            } 
         } catch (SQLException e) {
-            System.out.println("Error de conexión: " + e.getMessage());
+                 System.out.println("Error al agregar transacción: " + e.getMessage());
         }
     }
+    
 
     @Override
     public void transferFunds(Transaction egreso, Transaction ingreso) {
-        try (Connection conn = DatabaseManager.getConnection()) {
-            conn.setAutoCommit(false);
-            try {
-                addTransaction(egreso, conn);
-                addTransaction(ingreso, conn);
-                conn.commit();
-            } catch (SQLException e) {
-                conn.rollback();
-                System.out.println("Error en la transferencia: " + e.getMessage());
-            }
+        try {
+            this.conn.setAutoCommit(false);
+            addTransaction(egreso);
+            addTransaction(ingreso);
+            this.conn.commit();
         } catch (SQLException e) {
-            System.out.println("Error de conexión: " + e.getMessage());
+            try {
+                this.conn.rollback();
+            } catch (SQLException ex) {
+                System.out.println("Error al hacer rollback: " + ex.getMessage());
+            }
+            System.out.println("Error en la transferencia: " + e.getMessage());
+        } finally {
+            try {
+                this.conn.setAutoCommit(true);
+            } catch (SQLException e) {
+                System.out.println("Error al restaurar autocommit: " + e.getMessage());
+            }
         }
     }
 
@@ -69,8 +72,8 @@ public class TransactionDAO implements ITransactionDAO {
     public List<Transaction> getTransactions() {
         List<Transaction> transactions = new ArrayList<>();
         String sql = "SELECT * FROM transactions";
-        try (Connection conn = DatabaseManager.getConnection();
-             Statement stmt = conn.createStatement();
+        try (
+             Statement stmt = this.conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
             while (rs.next()) {
                 Account account = accountDAO.getAccountById(rs.getInt("account_id"));
@@ -95,8 +98,7 @@ public class TransactionDAO implements ITransactionDAO {
     public List<Transaction> getTransactionsByAccount(int accountID) {
         List<Transaction> transactions = new ArrayList<>();
         String sql = "SELECT * FROM transactions WHERE account_id = ?";
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement stmt = this.conn.prepareStatement(sql)) {
             stmt.setInt(1, accountID);
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
@@ -122,8 +124,8 @@ public class TransactionDAO implements ITransactionDAO {
     @Override
     public Transaction getTransactionById(int transactionID) {
         String sql = "SELECT * FROM transactions WHERE id = ?";
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (
+             PreparedStatement stmt = this.conn.prepareStatement(sql)) {
             stmt.setInt(1, transactionID);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
@@ -141,7 +143,7 @@ public class TransactionDAO implements ITransactionDAO {
                 }
             }
         } catch (SQLException e) {
-            System.out.println("Error al obtener transacción por ID: " + e.getMessage());
+            throw new RuntimeException("Error al obtener transacción por ID: " + e.getMessage());
         }
         return null;
     }
@@ -149,8 +151,7 @@ public class TransactionDAO implements ITransactionDAO {
     @Override
     public Transaction getLastTransactionByAccount(int accountID) {
         String sql = "SELECT * FROM transactions WHERE account_id = ? ORDER BY date DESC LIMIT 1";
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement stmt = this.conn.prepareStatement(sql)) {
             stmt.setInt(1, accountID);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
@@ -168,7 +169,7 @@ public class TransactionDAO implements ITransactionDAO {
                 }
             }
         } catch (SQLException e) {
-            System.out.println("Error al obtener última transacción por cuenta: " + e.getMessage());
+            throw new RuntimeException("Error al obtener última transacción por cuenta: " + e.getMessage());
         }
         return null;
     }
@@ -177,8 +178,8 @@ public class TransactionDAO implements ITransactionDAO {
     @Override
     public void deleteTransaction(int transactionID) {
         String sql = "DELETE FROM transactions WHERE id = ?";
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (
+             PreparedStatement stmt = this.conn.prepareStatement(sql)) {
             stmt.setInt(1, transactionID);
             stmt.executeUpdate();
         } catch (SQLException e) {
@@ -189,8 +190,7 @@ public class TransactionDAO implements ITransactionDAO {
     @Override
     public void updateTransaction(Transaction updatedTransaction) {
         String sql = "UPDATE transactions SET account_id = ?, type = ?, amount = ?, date = ?, description = ?, currency = ? WHERE id = ?";
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement stmt = this.conn.prepareStatement(sql)) {
             stmt.setInt(1, updatedTransaction.getAccount().getAccountID());
             stmt.setString(2, updatedTransaction.getTransactionType().name());
             stmt.setDouble(3, updatedTransaction.getAmount());
@@ -200,7 +200,7 @@ public class TransactionDAO implements ITransactionDAO {
             stmt.setInt(7, updatedTransaction.getTransactionID());
             stmt.executeUpdate();
         } catch (SQLException e) {
-            System.out.println("Error al actualizar transacción: " + e.getMessage());
+            throw new RuntimeException("Error al actualizar transacción: " + e.getMessage());
         }
     }
     
